@@ -1,6 +1,15 @@
 import { type Project, SyntaxKind } from "ts-morph";
 import { assertDefined } from "./utils.ts";
 
+const CAPTCHA_CHALLENGE_URL_PATTERNS = [
+	'challenges.cloudflare.com',
+	'google.com/recaptcha',
+	'www.gstatic.com/recaptcha',
+	'hcaptcha.com',
+	'api.funcaptcha.com',
+	'client-api.arkoselabs.com',
+];
+
 // ----------------
 // server/frames.ts
 // ----------------
@@ -27,6 +36,30 @@ export function patchFrames(project: Project) {
 		"frame._iframeWorld = undefined;",
 		"frame._mainWorld = undefined;",
 		"frame._isolatedWorld = undefined;"
+	]);
+
+	// -- _inflightRequestStarted Method (captcha networkidle exclusion) --
+	const inflightStartedMethod = frameManagerClass.getMethodOrThrow("_inflightRequestStarted");
+	const inflightStartedBody = inflightStartedMethod.getBodyOrThrow().asKindOrThrow(SyntaxKind.Block);
+	const faviconCheckStart = assertDefined(
+		inflightStartedBody.getStatements().find(s => s.getText().includes('request._isFavicon')),
+		'_isFavicon check in _inflightRequestStarted'
+	);
+	inflightStartedBody.insertStatements(faviconCheckStart.getChildIndex() + 1, [
+		`const _reqUrl = request.url();`,
+		`if (${JSON.stringify(CAPTCHA_CHALLENGE_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
+	]);
+
+	// -- _inflightRequestFinished Method (captcha networkidle exclusion) --
+	const inflightFinishedMethod = frameManagerClass.getMethodOrThrow("_inflightRequestFinished");
+	const inflightFinishedBody = inflightFinishedMethod.getBodyOrThrow().asKindOrThrow(SyntaxKind.Block);
+	const faviconCheckFinish = assertDefined(
+		inflightFinishedBody.getStatements().find(s => s.getText().includes('request._isFavicon')),
+		'_isFavicon check in _inflightRequestFinished'
+	);
+	inflightFinishedBody.insertStatements(faviconCheckFinish.getChildIndex() + 1, [
+		`const _reqUrl = request.url();`,
+		`if (${JSON.stringify(CAPTCHA_CHALLENGE_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
 	]);
 
 	// ------- Frame Class -------
