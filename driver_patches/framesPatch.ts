@@ -1,13 +1,39 @@
 import { type Project, SyntaxKind } from "ts-morph";
 import { assertDefined } from "./utils.ts";
 
-const CAPTCHA_CHALLENGE_URL_PATTERNS = [
+// URL patterns excluded from networkidle calculations.
+// These are captcha providers, analytics, tracking, fraud detection, and session
+// heartbeat endpoints that poll continuously and would prevent networkidle from firing.
+const NETWORKIDLE_EXCLUDED_URL_PATTERNS = [
+	// -- Captcha providers --
 	'challenges.cloudflare.com',
 	'google.com/recaptcha',
 	'www.gstatic.com/recaptcha',
 	'hcaptcha.com',
 	'api.funcaptcha.com',
 	'client-api.arkoselabs.com',
+	// -- Analytics & tracking --
+	'google-analytics.com',
+	'googletagmanager.com',
+	'analytics.google.com',
+	// -- Session recording & heatmaps --
+	'hotjar.com',
+	'fullstory.com',
+	'logrocket.com',
+	'mouseflow.com',
+	'clarity.ms',
+	// -- Telemetry & monitoring --
+	'browser-intake-datadoghq.com',
+	'sentry.io',
+	'newrelic.com',
+	'nr-data.net',
+	// -- Fraud detection --
+	'forter.com',
+	// -- Common polling/heartbeat patterns --
+	'/heartbeat',
+	'/keepalive',
+	'/keep-alive',
+	'/beacon',
 ];
 
 // ----------------
@@ -47,7 +73,7 @@ export function patchFrames(project: Project) {
 	);
 	inflightStartedBody.insertStatements(faviconCheckStart.getChildIndex() + 1, [
 		`const _reqUrl = request.url();`,
-		`if (${JSON.stringify(CAPTCHA_CHALLENGE_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
+		`if (${JSON.stringify(NETWORKIDLE_EXCLUDED_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
 	]);
 
 	// -- _inflightRequestFinished Method (captcha networkidle exclusion) --
@@ -59,7 +85,7 @@ export function patchFrames(project: Project) {
 	);
 	inflightFinishedBody.insertStatements(faviconCheckFinish.getChildIndex() + 1, [
 		`const _reqUrl = request.url();`,
-		`if (${JSON.stringify(CAPTCHA_CHALLENGE_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
+		`if (${JSON.stringify(NETWORKIDLE_EXCLUDED_URL_PATTERNS)}.some(p => _reqUrl.includes(p))) return;`,
 	]);
 
 	// ------- Frame Class -------
