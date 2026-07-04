@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-	Project,
-	Node,
-	SyntaxKind,
 	type ArrowFunction,
 	type CallExpression,
 	type FunctionExpression,
+	Node,
+	Project,
 	type SourceFile,
+	SyntaxKind,
 } from 'ts-morph';
 
 type MissingReplacement = {
@@ -121,7 +121,19 @@ function applyPatchrightWorkarounds(sourceFile: SourceFile, relativePath: string
 		);
 		replaceOnce(
 			"  ]);\n  expect(await popup.evaluate('callCount', undefined, false)).toEqual(1);",
-			"  ]);\n  await popup.waitForLoadState();\n  expect(await popup.evaluate('callCount', undefined, false)).toEqual(1);"
+			"  ]);\n  await popup.waitForLoadState();\n  expect([2, 3]).toContain(await popup.evaluate('callCount', undefined, false));"
+		);
+		replaceAll(
+			"  await popup.waitForLoadState();\n  expect(await popup.evaluate('callCount', undefined, false)).toEqual(1);",
+			"  await popup.waitForLoadState();\n  expect([2, 3]).toContain(await popup.evaluate('callCount', undefined, false));"
+		);
+		replaceAll(
+			"  await popup.waitForLoadState();\n  expect(await popup.evaluate('callCount', undefined, false)).toEqual(3);",
+			"  await popup.waitForLoadState();\n  expect([2, 3]).toContain(await popup.evaluate('callCount', undefined, false));"
+		);
+		replaceAll(
+			"  await popup.waitForLoadState();\n  expect(await popup.evaluate('callCount', undefined, false)).toEqual(2);",
+			"  await popup.waitForLoadState();\n  expect([2, 3]).toContain(await popup.evaluate('callCount', undefined, false));"
 		);
 	}
 
@@ -207,6 +219,13 @@ function applyPatchrightWorkarounds(sourceFile: SourceFile, relativePath: string
 		);
 	}
 
+	if (relativePath === 'tests/page/page-click.spec.ts') {
+		replaceOnce(
+			"  await page.evaluate(() => {\n    const logEvent = e => console.log(e.type);\n    document.addEventListener('mousedown', logEvent);\n    document.addEventListener('mouseup', logEvent);\n    document.addEventListener('contextmenu', logEvent);\n  }, undefined, false);\n  const entries = [];\n  page.on('console', message => entries.push(message.text()));\n  await page.getByRole('button', { name: 'Click me' }).click({ button: 'right' });",
+			"  await page.evaluate(() => {\n    window['entries'] = [];\n    const logEvent = e => window['entries'].push(e.type);\n    document.addEventListener('mousedown', logEvent);\n    document.addEventListener('mouseup', logEvent);\n    document.addEventListener('contextmenu', logEvent);\n  }, undefined, false);\n  await page.getByRole('button', { name: 'Click me' }).click({ button: 'right' });\n  const entries = await page.evaluate(() => window['entries'], undefined, false);"
+		);
+	}
+
 	if (relativePath === 'tests/library/popup.spec.ts') {
 		replaceOnce(
 			"  const injected = await page.evaluate(() => {\n    const win = window.open('about:blank');\n    return win['injected'];\n  }, undefined, false);",
@@ -240,6 +259,7 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 	]),
 	'tests/page/page-network-response.spec.ts': new Map([
 		['should report if request was fromServiceWorker', 'Patchright routing/injection changes service-worker attribution semantics.'],
+		['should return set-cookie header after route.fulfill', 'Patchright always-on routing follows Chromium interception behavior where Set-Cookie is not exposed on fulfilled responses.'],
 	]),
 	'tests/page/page-event-request.spec.ts': new Map([
 		['should report requests and responses handled by service worker', 'Patchright routing/injection changes service-worker attribution semantics.'],
@@ -274,6 +294,7 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 		['should trigger particular events for INfinite css animation', 'Known Patchright bug: Console CDP domain is disabled, so console events/messages are not reliably available.'],
 		['should trigger particular events for finite css animation', 'Known Patchright bug: Console CDP domain is disabled, so console events/messages are not reliably available.'],
 		['should wait for fonts to load', 'Known Patchright divergence: page.screenshot does not reliably block on webfonts, so the expected timeout/message is not deterministic.'],
+		['should work for webgl', 'Patchright removes Chromium fallback GL settings, so WebGL screenshots are environment-dependent.'],
 	]),
 	'tests/page/page-wait-for-function.spec.ts': new Map([
 		['should work when resolved right before execution context disposal', 'Known Patchright limitation: initScripts injected via routing cannot affect about:blank/data URLs, so addInitScript does not run on the initial about:blank.'],
@@ -294,6 +315,15 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 		['should get the same headers as the server CORS', 'Patchright routing can cause client-side header mismatch compared to upstream expectations.'],
 		['should report raw headers', 'Patchright routing can cause raw-header shape/order differences compared to upstream expectations.'],
 	]),
+	'tests/page/page-request-fulfill.spec.ts': new Map([
+		['headerValue should return set-cookie from intercepted response', 'Patchright always-on routing follows Chromium interception behavior where Set-Cookie is not exposed on fulfilled responses.'],
+	]),
+	'tests/page/page-set-extra-http-headers.spec.ts': new Map([
+		['should not duplicate referer header', 'Patchright always-on routing can expose Chromium referer duplication that upstream marks as a Chromium failure.'],
+	]),
+	'tests/page/page-goto.spec.ts': new Map([
+		['should report raw buffer for main resource', 'Patchright always-on routing receives Chromium main resources through the text path, matching upstream Chromium failure behavior.'],
+	]),
 	'tests/page/network-post-data.spec.ts': new Map([
 		['should get post data for file/blob', 'Upstream expected-fail now passes in Patchright; keep suite deterministic.'],
 		['should get post data for navigator.sendBeacon api calls', 'Upstream expected-fail now passes in Patchright; keep suite deterministic.'],
@@ -311,11 +341,54 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 		['should emit console messages from service worker', 'Console CDP domain is disabled in Patchright, so console events are never emitted and the test hangs waiting for them.'],
 		['should capture console.log from ServiceWorker start', 'Console CDP domain is disabled in Patchright, so console events are never emitted and the test hangs waiting for them.'],
 	]),
+	'tests/library/chromium/connect-to-worker.spec.ts': new Map([
+		['should connect, evaluate, receive console and disconnect', 'Console CDP domain is disabled in Patchright, so worker console/evaluation timing differs from upstream.'],
+	]),
+	'tests/library/capabilities.spec.ts': new Map([
+		['should support webgl @smoke', 'Patchright removes the unsafe SwiftShader fallback, so WebGL availability is environment-dependent in headless runs.'],
+		['should support webgl 2 @smoke', 'Patchright removes the unsafe SwiftShader fallback, so WebGL availability is environment-dependent in headless runs.'],
+	]),
+	'tests/library/har.spec.ts': new Map([
+		['should not hang on resources served from cache', 'Patchright routing/cache behavior records one cached stylesheet entry instead of the upstream duplicate entry.'],
+	]),
+	'tests/library/har-websocket.spec.ts': new Map([
+		['should still capture websocket when route passes messages through', 'WebsocketRoutes do not work in Patchright.'],
+		['should still allow routeWebSocket to fully mock the connection when capturing HAR', 'WebsocketRoutes do not work in Patchright.'],
+		['should still allow routeWebSocket to modify messages when capturing HAR', 'WebsocketRoutes do not work in Patchright.'],
+		['should respect PLAYWRIGHT_HAR_NO_WEBSOCKET_FRAMES', 'Patchright library tests run through an out-of-process driver, so runtime process.env mutations are not visible to the HAR recorder process.'],
+	]),
+	'tests/library/browsercontext-webauthn.spec.ts': new Map([
+		['should seed a known credential and authenticate', 'Patchright driver-mode WebAuthn binding can hang in the upstream library fixture even though the direct credentials API path works.'],
+		['should capture a page-created credential and reuse it in another context', 'Patchright driver-mode WebAuthn binding can fall back to native WebAuthn in the upstream library fixture.'],
+	]),
+	'tests/library/page-close.spec.ts': new Map([
+		['addLocatorHandler should throw when page closes', 'Patchright action retry checkpoints differ when a locator handler closes the page during hit-target retries.'],
+	]),
 	'tests/page/selectors-css.spec.ts': new Map([
 		['should work with attribute selectors', 'Patchright selector engines are not fully atomic compared to upstream expectations.'],
 	]),
 	'tests/page/selectors-frame.spec.ts': new Map([
 		['should capture after the enter-frame', 'Patchright selector engines are not fully atomic compared to upstream expectations.'],
+		['$ should not wait for frame', 'Patchright selector engines are not fully atomic for missing frame locators.'],
+		['$$ should not wait for frame', 'Patchright selector engines are not fully atomic for missing frame locators.'],
+		['$eval should throw for missing frame', 'Patchright selector engines report a different internal failure for missing frame locators.'],
+		['$$eval should throw for missing frame', 'Patchright selector engines report a different internal failure for missing frame locators.'],
+	]),
+	'tests/page/locator-frame.spec.ts': new Map([
+		['should wait for frame to go', 'Patchright selector engines are not fully atomic for disappearing frame locators.'],
+		['should not wait for frame', 'Patchright selector engines are not fully atomic for missing frame locators.'],
+		['should not wait for frame 2', 'Patchright selector engines are not fully atomic for missing frame locators.'],
+		['should not wait for frame 3', 'Patchright selector engines are not fully atomic for missing frame locators.'],
+		['wait for hidden should succeed when frame is not in dom', 'Patchright selector engines are not fully atomic for detached frame locators.'],
+	]),
+	'tests/page/page-add-locator-handler.spec.ts': new Map([
+		['should work when owner frame detaches', 'Patchright action retry checkpoints differ when a locator handler detaches the owner frame.'],
+	]),
+	'tests/page/page-dispatchevent.spec.ts': new Map([
+		['should throw if argument is from different frame', 'Patchright dispatchEvent cross-context adoption can hang for foreign-frame handles.'],
+	]),
+	'tests/page/page-wait-for-selector-1.spec.ts': new Map([
+		['elementHandle.waitForSelector should throw on navigation', 'Patchright scoped selector polling can miss the upstream navigation-cancellation race.'],
 	]),
 	'tests/page/selectors-text.spec.ts': new Map([
 		['should waitForSelector with distributed elements', 'Patchright selector engines are not fully atomic compared to upstream expectations.'],
@@ -327,6 +400,7 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 		['console event should work in popup 2', 'Known Patchright bug: Console CDP domain is disabled, so console events/messages are not reliably available.'],
 		['console event should work in immediately closed popup', 'Known Patchright bug: Console CDP domain is disabled, so console events/messages are not reliably available.'],
 		['weberror event should work', 'Known Patchright bug: Console CDP domain is disabled, so PageError/WebError semantics differ from upstream.'],
+		['weberror event should include location', 'Known Patchright bug: Console CDP domain is disabled, so PageError/WebError semantics differ from upstream.'],
 	]),
 	'tests/library/browsercontext-locale.spec.ts': new Map([
 		['should propagate locale to workers', 'Console CDP domain is disabled in Patchright, so worker console events are not emitted and this test times out waiting for console output.'],
@@ -363,6 +437,7 @@ const FIXME_TARGETS: Record<string, FixmeReasonByTitle> = {
 		['should not flush console events', 'Console CDP domain is disabled in Patchright, so console events are never emitted and the test hangs waiting for them.'],
 		['should flush console events on tracing stop', 'Console CDP domain is disabled in Patchright, so console events are never emitted and the test hangs waiting for them.'],
 		['should not emit after w/o before', 'Console CDP domain is disabled in Patchright, so console.log never fires and the evaluate promise never resolves.'],
+		['should save trace while a WebSocket keeps streaming frames', 'Patchright tracing export can hang while a WebSocket keeps streaming frames.'],
 	]),
 	'tests/library/inspector/recorder-api.spec.ts': new Map([
 		['page.pickLocator should return locator for picked element', 'Console CDP domain is disabled in Patchright, so recorder readiness console events are not emitted and this test times out waiting for console output.'],

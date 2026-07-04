@@ -54,7 +54,7 @@
 <details open>
     <summary><h3>Sponsors</h1></summary>
 
-<sup>Want to Sponsor this Project? [Contact Me](https://discordapp.com/users/935224495126487150)!</sup>
+<sup>Want to Sponsor this Project? Contact [@vinyzu](https://discordapp.com/users/935224495126487150) on Discord!</sup>
 
 </br>
 
@@ -90,6 +90,52 @@ Built for developers who need **reliable**, anti-detection proxy infrastructure.
 - 🔥 Special Offer: Use code **RAPID10** to get **10% off**
 
 <sup> Start fast. Scale globally. Stay stable with [RapidProxy](https://www.rapidproxy.io/?ref=Vinyzu). </sup>
+
+---
+
+[<img width="80%" alt="NodeMaven Banner" src="https://github.com/user-attachments/assets/5db03567-59c6-414f-a9ce-9b662ffa2b02" />](https://go.nodemaven.com/Vinyzu)
+</br>
+#### [NodeMaven](https://go.nodemaven.com/Vinyzu): Your reliable proxy provider with High Quality IPs. </br> Superb solution for automation, web scraping, SEO research, and social media management.
+
+Why [NodeMaven](https://go.nodemaven.com/Vinyzu)?
+
+✅ 99.9% Uptime
+</br>
+🎯 Sticky sessions up to 7 days
+</br>
+🔍 IP Filtering: Proxies are guaranteed to have fraud score <97%
+</br>
+🔰 No KYC required
+</br>
+💸 Cashback on Traffic - Burn GB and earn up to 10% back
+
+**Special codes** for Patchright users:
+</br>
+🔥 **PATCHRIGHT35** - **35% off** to Mobile and Residential Proxies
+</br>
+🔥 **PATCHRIGHT40** - **40% off** to ISP (Static) Proxies
+
+<sup>Choose quality and stability with [NodeMaven](https://go.nodemaven.com/Vinyzu).</sup>
+
+---
+
+[<img width="80%" alt="ColaProxy Banner" src="https://github.com/user-attachments/assets/4b5b22c4-955a-47cf-b2f1-3c2aa5c500ba" />](https://colaproxy.com/?utm_source=viny&utm_medium=viny&ref=viny)
+
+#### [**ColaProxy**](https://colaproxy.com/?utm_source=viny&utm_medium=viny&ref=viny) : Low-Cost Residential Proxies for Scalable Automation, Scraping, and Global Data Access
+
+Why choose [**ColaProxy**](https://colaproxy.com/?utm_source=viny&utm_medium=viny&ref=viny)?
+
+* Dynamic Residential Proxies from as low as **$0.3/GB**  
+* Massive residential IP pool across 195+ countries  
+* 99.9% uptime with stable and fast connections  
+* HTTP / HTTPS / SOCKS5 protocol support  
+* Rotating & sticky sessions for flexible automation  
+* Precise country-level geo-targeting  
+* 24/7 expert support
+
+Need reliable proxies for Patchright automation? [ColaProxy](https://colaproxy.com/?utm_source=viny&utm_medium=viny&ref=viny) offers cost-effective residential, ISP, and mobile proxy solutions for scraping, testing, account management, SEO monitoring, and global data collection. Use coupon code **COLA20** to enjoy 20% off your order.
+
+<sup>Affordable, stable, and built for developers. Start scaling your Patchright projects with [**ColaProxy**](https://colaproxy.com/?utm_source=viny&utm_medium=viny&ref=viny).</sup>
 
 </details>
 
