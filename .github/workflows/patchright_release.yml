@@ -364,7 +364,11 @@ jobs:
   patchright-workflow:
     name: "Patchright Release: Install, Patch, Build and Publish Patchright Driver"
     needs: [check-release-version, check-patch-impact, run-patchright-tests]
-    if: needs.check-release-version.outputs.proceed == 'true' && needs.run-patchright-tests.result == 'success' && needs.run-patchright-tests.outputs.test_outcome == 'success'
+    # check-patch-impact is an informational notifier (opens an issue on upstream
+    # breakage), NOT a release gate - the conditions below never check its result.
+    # always() lets the release proceed even when it fails, e.g. the first-build
+    # bootstrap case where there is no previous release to diff against (v0.0.0 404).
+    if: always() && needs.check-release-version.outputs.proceed == 'true' && needs.run-patchright-tests.result == 'success' && needs.run-patchright-tests.outputs.test_outcome == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
