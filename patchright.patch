@@ -2327,7 +2327,25 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
  
      frame._onClearLifecycle();
      const navigationEvent: NavigationEvent = { url, name, newDocument: frame._currentDocument, isPublic: true };
-@@ -615,12 +622,15 @@
+@@ -380,6 +387,8 @@
+     const frame = request.frame()!;
+     if (request._isFavicon)
+       return;
++    const _reqUrl = request.url();
++    if (["challenges.cloudflare.com","google.com/recaptcha","www.gstatic.com/recaptcha","hcaptcha.com","api.funcaptcha.com","client-api.arkoselabs.com","google-analytics.com","googletagmanager.com","analytics.google.com","hotjar.com","fullstory.com","logrocket.com","mouseflow.com","clarity.ms","browser-intake-datadoghq.com","sentry.io","newrelic.com","nr-data.net","forter.com","/heartbeat","/keepalive","/keep-alive","/beacon"].some(p => _reqUrl.includes(p))) return;
+     if (!frame._inflightRequests.has(request))
+       return;
+     frame._inflightRequests.delete(request);
+@@ -391,6 +400,8 @@
+     const frame = request.frame()!;
+     if (request._isFavicon)
+       return;
++    const _reqUrl = request.url();
++    if (["challenges.cloudflare.com","google.com/recaptcha","www.gstatic.com/recaptcha","hcaptcha.com","api.funcaptcha.com","client-api.arkoselabs.com","google-analytics.com","googletagmanager.com","analytics.google.com","hotjar.com","fullstory.com","logrocket.com","mouseflow.com","clarity.ms","browser-intake-datadoghq.com","sentry.io","newrelic.com","nr-data.net","forter.com","/heartbeat","/keepalive","/keep-alive","/beacon"].some(p => _reqUrl.includes(p))) return;
+     frame._inflightRequests.add(request);
+     if (frame._inflightRequests.size === 1)
+       frame._stopNetworkIdleTimer();
+@@ -615,12 +626,15 @@
    }
  
    nonStallingEvaluateInExistingContext(expression: string, world: types.World): Promise<any> {
@@ -2349,7 +2367,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    _recalculateNetworkIdle(frameThatAllowsRemovingNetworkIdle?: Frame) {
-@@ -772,18 +782,79 @@
+@@ -772,18 +786,79 @@
      return await progress.race(this._page.delegate.getFrameElement(this));
    }
  
@@ -2437,7 +2455,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    private _existingMainContext(): dom.FrameExecutionContext | null {
-@@ -791,107 +862,222 @@
+@@ -791,107 +866,222 @@
    }
  
    utilityContext(): Promise<dom.FrameExecutionContext> {
@@ -2732,7 +2750,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    private async _evalOnSelector(selector: string, strict: boolean, expression: string, isFunction: boolean | undefined, arg: any, scope?: dom.ElementHandle): Promise<any> {
-@@ -903,8 +1089,23 @@
+@@ -903,8 +1093,23 @@
      return result;
    }
  
@@ -2758,7 +2776,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    private async _evalOnSelectorAll(selector: string, expression: string, isFunction: boolean | undefined, arg: any, scope?: dom.ElementHandle): Promise<any> {
-@@ -923,17 +1124,34 @@
+@@ -923,17 +1128,34 @@
    }
  
    async querySelectorAll(progress: Progress, selector: string): Promise<dom.ElementHandle<Element>[]> {
@@ -2801,7 +2819,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    async content(progress: Progress): Promise<string> {
-@@ -959,31 +1177,23 @@
+@@ -959,31 +1181,23 @@
    }
  
    async setContent(progress: Progress, html: string, options: types.NavigateOptions): Promise<void> {
@@ -2850,7 +2868,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    name(): string {
-@@ -1197,59 +1407,68 @@
+@@ -1197,59 +1411,68 @@
      progress: Progress,
      selector: string,
      options: { strict?: boolean, noAutoWaiting?: boolean, force?: boolean, performActionPreChecks?: boolean },
@@ -2971,7 +2989,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    async rafrafTimeoutScreenshotElementWithProgress(progress: Progress, selector: string, timeout: number, options: ScreenshotOptions): Promise<Buffer> {
-@@ -1411,20 +1630,50 @@
+@@ -1411,20 +1634,50 @@
    }
  
    async isVisibleInternal(progress: Progress, selector: string, options: types.StrictOptions = {}, scope?: dom.ElementHandle): Promise<boolean> {
@@ -3036,7 +3054,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    async isHidden(progress: Progress, selector: string, options: types.StrictOptions = {}, scope?: dom.ElementHandle): Promise<boolean> {
-@@ -1558,44 +1807,48 @@
+@@ -1558,44 +1811,48 @@
    }
  
    private async _expectInternal(progress: Progress, selector: string | undefined, options: FrameExpectParams, lastIntermediateResult: { received?: ExpectReceived, isSet: boolean, errorMessage?: string }, noAbort: boolean) {
@@ -3120,7 +3138,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    async waitForFunctionExpression<R>(progress: Progress, expression: string, isFunction: boolean | undefined, arg: any, options: { pollingInterval?: number }, world: types.World = 'main'): Promise<js.SmartHandle<R>> {
-@@ -1654,7 +1907,7 @@
+@@ -1654,7 +1911,7 @@
          return { result, abort: () => aborted = true };
        }, { expression, isFunction, polling: options.pollingInterval, arg }));
        try {
@@ -3129,7 +3147,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
        } catch (error) {
          // Note: it is important to await "abort()" to prevent any side effects
          // after this method returns.
-@@ -1714,41 +1967,251 @@
+@@ -1714,41 +1971,251 @@
    }
  
    _onDetached() {
@@ -3413,7 +3431,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
    }
  
    private _setContext(world: types.World, context: dom.FrameExecutionContext | null) {
-@@ -1805,7 +2268,7 @@
+@@ -1805,7 +2272,7 @@
    }
  
    async extendInjectedScript(source: string, arg?: any) {
@@ -3422,7 +3440,7 @@ diff -ruN -x protocol.yml --minimal playwright/node_modules/playwright-core/src/
      const injectedScriptHandle = await context.injectedScript();
      await injectedScriptHandle.evaluate((injectedScript, { source, arg }) => {
        injectedScript.extend(source, arg);
-@@ -1844,6 +2307,328 @@
+@@ -1844,6 +2311,328 @@
    private _asLocator(selector: string) {
      return asLocator(this._page.browserContext._browser.sdkLanguage(), selector);
    }
@@ -7356,7 +7374,25 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
  
      frame._onClearLifecycle();
      const navigationEvent: NavigationEvent = { url, name, newDocument: frame._currentDocument, isPublic: true };
-@@ -615,12 +622,15 @@
+@@ -380,6 +387,8 @@
+     const frame = request.frame()!;
+     if (request._isFavicon)
+       return;
++    const _reqUrl = request.url();
++    if (["challenges.cloudflare.com","google.com/recaptcha","www.gstatic.com/recaptcha","hcaptcha.com","api.funcaptcha.com","client-api.arkoselabs.com","google-analytics.com","googletagmanager.com","analytics.google.com","hotjar.com","fullstory.com","logrocket.com","mouseflow.com","clarity.ms","browser-intake-datadoghq.com","sentry.io","newrelic.com","nr-data.net","forter.com","/heartbeat","/keepalive","/keep-alive","/beacon"].some(p => _reqUrl.includes(p))) return;
+     if (!frame._inflightRequests.has(request))
+       return;
+     frame._inflightRequests.delete(request);
+@@ -391,6 +400,8 @@
+     const frame = request.frame()!;
+     if (request._isFavicon)
+       return;
++    const _reqUrl = request.url();
++    if (["challenges.cloudflare.com","google.com/recaptcha","www.gstatic.com/recaptcha","hcaptcha.com","api.funcaptcha.com","client-api.arkoselabs.com","google-analytics.com","googletagmanager.com","analytics.google.com","hotjar.com","fullstory.com","logrocket.com","mouseflow.com","clarity.ms","browser-intake-datadoghq.com","sentry.io","newrelic.com","nr-data.net","forter.com","/heartbeat","/keepalive","/keep-alive","/beacon"].some(p => _reqUrl.includes(p))) return;
+     frame._inflightRequests.add(request);
+     if (frame._inflightRequests.size === 1)
+       frame._stopNetworkIdleTimer();
+@@ -615,12 +626,15 @@
    }
  
    nonStallingEvaluateInExistingContext(expression: string, world: types.World): Promise<any> {
@@ -7378,7 +7414,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    _recalculateNetworkIdle(frameThatAllowsRemovingNetworkIdle?: Frame) {
-@@ -772,18 +782,79 @@
+@@ -772,18 +786,79 @@
      return await progress.race(this._page.delegate.getFrameElement(this));
    }
  
@@ -7466,7 +7502,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    private _existingMainContext(): dom.FrameExecutionContext | null {
-@@ -791,107 +862,222 @@
+@@ -791,107 +866,222 @@
    }
  
    utilityContext(): Promise<dom.FrameExecutionContext> {
@@ -7761,7 +7797,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    private async _evalOnSelector(selector: string, strict: boolean, expression: string, isFunction: boolean | undefined, arg: any, scope?: dom.ElementHandle): Promise<any> {
-@@ -903,8 +1089,23 @@
+@@ -903,8 +1093,23 @@
      return result;
    }
  
@@ -7787,7 +7823,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    private async _evalOnSelectorAll(selector: string, expression: string, isFunction: boolean | undefined, arg: any, scope?: dom.ElementHandle): Promise<any> {
-@@ -923,17 +1124,34 @@
+@@ -923,17 +1128,34 @@
    }
  
    async querySelectorAll(progress: Progress, selector: string): Promise<dom.ElementHandle<Element>[]> {
@@ -7830,7 +7866,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    async content(progress: Progress): Promise<string> {
-@@ -959,31 +1177,23 @@
+@@ -959,31 +1181,23 @@
    }
  
    async setContent(progress: Progress, html: string, options: types.NavigateOptions): Promise<void> {
@@ -7879,7 +7915,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    name(): string {
-@@ -1197,59 +1407,68 @@
+@@ -1197,59 +1411,68 @@
      progress: Progress,
      selector: string,
      options: { strict?: boolean, noAutoWaiting?: boolean, force?: boolean, performActionPreChecks?: boolean },
@@ -8000,7 +8036,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    async rafrafTimeoutScreenshotElementWithProgress(progress: Progress, selector: string, timeout: number, options: ScreenshotOptions): Promise<Buffer> {
-@@ -1411,20 +1630,50 @@
+@@ -1411,20 +1634,50 @@
    }
  
    async isVisibleInternal(progress: Progress, selector: string, options: types.StrictOptions = {}, scope?: dom.ElementHandle): Promise<boolean> {
@@ -8065,7 +8101,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    async isHidden(progress: Progress, selector: string, options: types.StrictOptions = {}, scope?: dom.ElementHandle): Promise<boolean> {
-@@ -1558,44 +1807,48 @@
+@@ -1558,44 +1811,48 @@
    }
  
    private async _expectInternal(progress: Progress, selector: string | undefined, options: FrameExpectParams, lastIntermediateResult: { received?: ExpectReceived, isSet: boolean, errorMessage?: string }, noAbort: boolean) {
@@ -8149,7 +8185,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    async waitForFunctionExpression<R>(progress: Progress, expression: string, isFunction: boolean | undefined, arg: any, options: { pollingInterval?: number }, world: types.World = 'main'): Promise<js.SmartHandle<R>> {
-@@ -1654,7 +1907,7 @@
+@@ -1654,7 +1911,7 @@
          return { result, abort: () => aborted = true };
        }, { expression, isFunction, polling: options.pollingInterval, arg }));
        try {
@@ -8158,7 +8194,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
        } catch (error) {
          // Note: it is important to await "abort()" to prevent any side effects
          // after this method returns.
-@@ -1714,41 +1967,251 @@
+@@ -1714,41 +1971,251 @@
    }
  
    _onDetached() {
@@ -8442,7 +8478,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
    }
  
    private _setContext(world: types.World, context: dom.FrameExecutionContext | null) {
-@@ -1805,7 +2268,7 @@
+@@ -1805,7 +2272,7 @@
    }
  
    async extendInjectedScript(source: string, arg?: any) {
@@ -8451,7 +8487,7 @@ diff -ruN -x protocol.yml --minimal playwright/packages/playwright-core/src/serv
      const injectedScriptHandle = await context.injectedScript();
      await injectedScriptHandle.evaluate((injectedScript, { source, arg }) => {
        injectedScript.extend(source, arg);
-@@ -1844,6 +2307,328 @@
+@@ -1844,6 +2311,328 @@
    private _asLocator(selector: string) {
      return asLocator(this._page.browserContext._browser.sdkLanguage(), selector);
    }
